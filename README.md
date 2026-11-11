@@ -1,3 +1,4 @@
+
 # FitTrack – AI-Powered Fitness & Wellness Platform
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -377,3 +378,6 @@ FitTrack AI workout programs, nutritional calculations, and advice are for infor
 
 ## 📄 License
 This project is licensed under the MIT License. Developed for advanced full-stack software engineering and AI application portfolios.
+=======
+# apex-ai
+
