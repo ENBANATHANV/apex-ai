@@ -23,8 +23,8 @@ services:
   # FitTrack Backend API Server
   backend:
     build:
-      context: .
-      dockerfile: server/Dockerfile
+      context: ./server
+      dockerfile: Dockerfile
     container_name: fittrack-backend
     restart: always
     depends_on:

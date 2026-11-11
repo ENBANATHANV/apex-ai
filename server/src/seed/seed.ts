@@ -391,7 +391,11 @@ async function main() {
     { planId: upperLowerPlan.id, slug: 'hanging-leg-raise', day: 2, order: 4, sets: 3, reps: '12-15', rest: 45 },
   ];
 
-  for (const pe of planExercises) {
+  const existingPlanExCount = await prisma.workoutPlanExercise.count({
+    where: { workoutPlanId: upperLowerPlan.id },
+  });
+
+  for (const pe of existingPlanExCount === 0 ? planExercises : []) {
     if (createdExercises[pe.slug]) {
       await prisma.workoutPlanExercise.create({
         data: {
@@ -405,6 +409,15 @@ async function main() {
         },
       });
     }
+  }
+
+  const existingDemoGoals = await prisma.fitnessGoal.count({
+    where: { userId: demoUser.id },
+  });
+
+  if (existingDemoGoals > 0) {
+    console.log('✅ Demo user data already seeded, skipping duplicates.');
+    return;
   }
 
   // 4. Seed Demo User Fitness Goals

@@ -1,36 +1,38 @@
-# FitTrack Production Dockerfile (Backend + Static Client)
+# FitTrack Production Dockerfile (Backend API Server)
+# Build context: ./server (Render Root Directory = server)
 FROM node:20-alpine AS builder
+
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# Copy server package & install
-COPY server/package*.json ./server/
-RUN cd server && npm ci
+# Install dependencies
+COPY package*.json ./
+RUN npm ci
 
-# Copy server prisma schema & generate
-COPY server/prisma ./server/prisma
-RUN cd server && npx prisma generate
+# Generate Prisma Client using PostgreSQL production schema
+COPY prisma ./prisma
+RUN cp prisma/schema.postgresql.prisma prisma/schema.prisma && npx prisma generate
 
-# Copy server code and build
-COPY server/tsconfig.json ./server/
-COPY server/src ./server/src
-RUN cd server && npm run build
+# Compile TypeScript source
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build
 
 # Stage 2: Production Runner
 FROM node:20-alpine AS runner
+
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=5000
 
-COPY server/package*.json ./
-RUN npm ci --only=production
-
-COPY --from=builder /app/server/dist ./dist
-COPY --from=builder /app/server/prisma ./prisma
-COPY --from=builder /app/server/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/server/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 5000
 
-CMD ["node", "dist/server.js"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && node dist/seed/seed.js && node dist/server.js"]
